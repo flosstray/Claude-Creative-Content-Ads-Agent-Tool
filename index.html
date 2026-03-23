@@ -322,9 +322,36 @@
   .trend-item-text { font-size: 11px; color: var(--text-secondary); line-height: 1.45; }
 
   @media (max-width: 520px) { .grid-2 { grid-template-columns: 1fr; } .grid-3 { grid-template-columns: 1fr; } .funnel-grid { grid-template-columns: 1fr; } .trend-grid { grid-template-columns: 1fr; } }
+
+  /* API BAR */
+  .api-bar { position: sticky; top: 0; z-index: 100; display: flex; gap: 12px; align-items: center; padding: 6px 16px; background: var(--bg-secondary); border-bottom: 0.5px solid var(--border); font-size: 11px; }
+  .api-bar label { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin: 0; white-space: nowrap; }
+  .api-bar input { flex: 1; max-width: 220px; padding: 4px 8px; font-size: 11px; background: var(--bg); border: 0.5px solid var(--border); border-radius: 4px; color: var(--text-primary); font-family: 'Barlow', sans-serif; }
+  .api-bar .api-save { padding: 3px 8px; font-size: 10px; font-weight: 700; background: var(--green); color: white; border: none; border-radius: 4px; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
+  .api-bar .api-status { font-size: 10px; color: var(--green); white-space: nowrap; min-width: 12px; }
+
+  /* BRAND DROPDOWN */
+  .brand-dropdown { position: relative; }
+  .brand-dropdown-menu { display: none; position: absolute; top: 100%; right: 0; background: var(--bg); border: 0.5px solid var(--border-strong); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 180px; max-height: 200px; overflow-y: auto; z-index: 50; margin-top: 4px; }
+  .brand-dropdown-menu.open { display: block; }
+  .brand-dropdown-item { padding: 8px 12px; font-size: 12px; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: background 0.1s; border-bottom: 0.5px solid var(--border); }
+  .brand-dropdown-item:last-child { border-bottom: none; }
+  .brand-dropdown-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+  .brand-dropdown-item.active { color: var(--green); }
 </style>
 </head>
 <body>
+<div class="api-bar">
+  <label>Anthropic</label>
+  <input type="password" id="apiKeyInput" placeholder="sk-ant-...">
+  <button class="api-save" onclick="saveApiKey()">Save</button>
+  <span class="api-status" id="apiKeyStatus"></span>
+  <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+  <label>Gemini</label>
+  <input type="password" id="geminiKeyInput" placeholder="Gemini API key">
+  <button class="api-save" onclick="saveGeminiKey()">Save</button>
+  <span class="api-status" id="geminiKeyStatus"></span>
+</div>
 <div class="container">
 
   <!-- HEADER -->
@@ -335,7 +362,10 @@
       <p>Upload your brand profile. Generate paid & organic ad copy with AI vision.</p>
     </div>
     <div class="brand-status">
-      <div class="brand-status-pill empty" id="brandStatusPill" onclick="switchTab('brand')">No Brand Loaded</div>
+      <div class="brand-dropdown">
+        <div class="brand-status-pill empty" id="brandStatusPill" onclick="toggleBrandDropdown()">No Brand Loaded</div>
+        <div class="brand-dropdown-menu" id="brandDropdownMenu"></div>
+      </div>
       <div style="font-size:9px;color:var(--text-tertiary);text-align:right;" id="trendDate"></div>
     </div>
   </div>
@@ -349,24 +379,6 @@
       <button class="project-edit-btn" onclick="editProjectName()" id="projectEditBtn" title="Rename project">&#x270E;</button>
     </div>
     <button class="new-project-btn" onclick="newProject()">+ New Project</button>
-  </div>
-
-  <!-- API KEYS -->
-  <div class="section-block" style="margin-bottom:12px;">
-    <label>Anthropic API Key <span style="font-weight:400;text-transform:none;letter-spacing:0;">&#8212; for ad copy generation</span></label>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <input type="password" id="apiKeyInput" placeholder="Enter your Anthropic API key (sk-ant-...)" style="flex:1;">
-      <button onclick="saveApiKey()" style="padding:8px 14px;background:var(--green);color:white;border:none;border-radius:var(--radius-md);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;white-space:nowrap;">Save</button>
-    </div>
-    <div class="field-hint" id="apiKeyStatus">Required for image analysis and ad copy. Stored only in your browser.</div>
-  </div>
-  <div class="section-block" style="margin-bottom:12px;">
-    <label>Gemini API Key <span style="font-weight:400;text-transform:none;letter-spacing:0;">&#8212; for video analysis (optional)</span></label>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <input type="password" id="geminiKeyInput" placeholder="Enter your Google Gemini API key" style="flex:1;">
-      <button onclick="saveGeminiKey()" style="padding:8px 14px;background:var(--green);color:white;border:none;border-radius:var(--radius-md);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;white-space:nowrap;">Save</button>
-    </div>
-    <div class="field-hint" id="geminiKeyStatus">Only needed for video URL analysis. Free tier available. Stored only in your browser.</div>
   </div>
 
   <!-- TABS -->
@@ -390,13 +402,13 @@
       </div>
       <div class="brand-ai-status" id="aiJsonStatus" style="margin-bottom:8px;"></div>
 
-      <!-- WEBSITE URL + SEO AUDIT -->
+      <!-- WEBSITE URL + SEO INTELLIGENCE -->
       <div class="brand-ai-section" id="aiSeoSection">
-        <div class="brand-ai-title"><span class="ai-icon">🌐</span> Website SEO Analysis</div>
-        <div class="brand-ai-desc">Enter your website URL and Claude will perform an SEO audit — analyzing meta tags, content, keywords, structure, and more — then auto-populate your brand profile fields.</div>
+        <div class="brand-ai-title"><span class="ai-icon">🌐</span> Website SEO & Intelligence Analysis</div>
+        <div class="brand-ai-desc">Enter your website URL for a full SEO intelligence analysis — ICP, keywords, LLM queries, and brand extraction.</div>
         <div class="brand-ai-row">
           <input type="url" id="bp-websiteUrl" placeholder="https://yourbrand.com" style="flex:1;">
-          <button class="brand-ai-btn green" id="aiSeoAuditBtn" onclick="runSeoAudit()">🔍 Run SEO Audit</button>
+          <button class="brand-ai-btn green" id="aiSeoAuditBtn" onclick="runSeoAudit()">🔍 Run SEO Analysis</button>
         </div>
         <div class="brand-ai-status" id="aiSeoStatus"></div>
       </div>
@@ -731,9 +743,12 @@
         <button class="analyze-btn" id="cgAnalyzeProfileBtn" onclick="analyzeInstagramProfile()" style="white-space:nowrap;padding:8px 14px;width:auto;margin-top:0;flex-shrink:0;">&#x1F50D; Analyze Profile</button>
       </div>
       <div class="field-hint">Enter your Instagram handle so Claude can analyze your content style and audience.</div>
-      <div id="cgProfileAnalysis" style="display:none;margin-top:10px;padding:12px;background:var(--bg-secondary);border-radius:var(--radius-md);border:0.5px solid var(--border-strong);">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--green);margin-bottom:6px;">&#x2713; Profile Analyzed</div>
-        <div id="cgProfileSummary" style="font-size:13px;color:var(--text-secondary);line-height:1.5;white-space:pre-wrap;"></div>
+      <div id="cgProfileAnalysis" style="display:none;margin-top:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--green);">&#x2713; Profile Analyzed</div>
+          <button class="field-regen-btn" onclick="document.getElementById('cgProfileAnalysis').style.display='none';cgProfileData=''" style="font-size:9px;">&#x2715; Clear</button>
+        </div>
+        <div id="cgProfileCards"></div>
       </div>
     </div>
 
@@ -884,11 +899,11 @@ function getApiKey() { return localStorage.getItem(API_KEY_STORAGE) || ''; }
 function getGeminiKey() { return localStorage.getItem(GEMINI_KEY_STORAGE) || ''; }
 function saveApiKey() {
   const key = document.getElementById('apiKeyInput').value.trim();
-  if (key) { localStorage.setItem(API_KEY_STORAGE, key); document.getElementById('apiKeyStatus').textContent = '\u2713 API key saved.'; document.getElementById('apiKeyStatus').style.color = 'var(--green)'; }
+  if (key) { localStorage.setItem(API_KEY_STORAGE, key); document.getElementById('apiKeyStatus').textContent = '\u2713'; }
 }
 function saveGeminiKey() {
   const key = document.getElementById('geminiKeyInput').value.trim();
-  if (key) { localStorage.setItem(GEMINI_KEY_STORAGE, key); document.getElementById('geminiKeyStatus').textContent = '\u2713 Gemini key saved.'; document.getElementById('geminiKeyStatus').style.color = 'var(--green)'; }
+  if (key) { localStorage.setItem(GEMINI_KEY_STORAGE, key); document.getElementById('geminiKeyStatus').textContent = '\u2713'; }
 }
 function getApiHeaders() {
   return { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
@@ -981,6 +996,47 @@ function updateBrandStatus() {
     pill.className = 'brand-status-pill empty';
     logo.textContent = 'IG';
   }
+  buildBrandDropdown();
+}
+
+function toggleBrandDropdown() {
+  const menu = document.getElementById('brandDropdownMenu');
+  if (menu.classList.contains('open')) {
+    menu.classList.remove('open');
+  } else {
+    buildBrandDropdown();
+    menu.classList.toggle('open');
+  }
+}
+
+function buildBrandDropdown() {
+  const menu = document.getElementById('brandDropdownMenu');
+  // Find projects that have a saved brand profile with a brandName
+  const projectsWithBrands = projects.filter(p => {
+    try {
+      const saved = localStorage.getItem(BRAND_PROFILE_KEY + '_' + p.id);
+      if (saved) { const bp = JSON.parse(saved); return bp.brandName; }
+    } catch(e) {}
+    return false;
+  });
+  if (projectsWithBrands.length < 2) { menu.innerHTML = ''; return; }
+  menu.innerHTML = projectsWithBrands.map(p => {
+    let brandName = '';
+    try { const saved = JSON.parse(localStorage.getItem(BRAND_PROFILE_KEY + '_' + p.id)); brandName = saved.brandName; } catch(e) {}
+    const isActive = p.id === currentProjectId;
+    return `<div class="brand-dropdown-item${isActive ? ' active' : ''}" onclick="switchToProject('${p.id}')">${esc(brandName)} <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">(${esc(p.name)})</span></div>`;
+  }).join('');
+}
+
+function switchToProject(projectId) {
+  const menu = document.getElementById('brandDropdownMenu');
+  menu.classList.remove('open');
+  if (projectId === currentProjectId) return;
+  currentProjectId = projectId;
+  localStorage.setItem(ACTIVE_PROJECT_KEY, currentProjectId);
+  updateProjectDisplay();
+  loadBrandProfile();
+  loadHistory();
 }
 
 function exportBrandProfile() {
@@ -1136,7 +1192,7 @@ async function importAndAnalyzeBrandJson(e) {
   reader.readAsText(file);
 }
 
-// SEO Audit — fetch website and analyze
+// SEO LLM Query Architect — fetch website and perform full intelligence analysis
 async function runSeoAudit() {
   const apiKey = getApiKey();
   if (!apiKey) { alert('Please save your Anthropic API key first.'); return; }
@@ -1146,7 +1202,7 @@ async function runSeoAudit() {
   const btn = document.getElementById('aiSeoAuditBtn');
   const status = document.getElementById('aiSeoStatus');
   btn.disabled = true;
-  btn.textContent = '\u23F3 Auditing...';
+  btn.textContent = '\u23F3 Analyzing...';
   status.textContent = 'Step 1/3: Fetching website content...';
   status.className = 'brand-ai-status working';
 
@@ -1160,42 +1216,103 @@ async function runSeoAudit() {
       htmlContent = await fetchRes.text();
       if (htmlContent.length > 50000) htmlContent = htmlContent.substring(0, 50000);
     } catch(fetchErr) {
-      // Fallback: just send the URL to Claude without HTML
       htmlContent = '';
       status.textContent = 'Step 1/3: Could not fetch HTML directly. Analyzing URL context...';
     }
 
-    // Step 2: Send to Claude for SEO audit + brand extraction
-    status.textContent = 'Step 2/3: Claude is performing SEO audit and extracting brand data...';
+    // Step 2: Send to Claude for full SEO intelligence + brand extraction
+    status.textContent = 'Step 2/3: Claude is performing SEO intelligence analysis...';
 
     const seoSystemPrompt = BRAND_EXTRACT_PROMPT + `
 
-ADDITIONAL SEO AUDIT CONTEXT:
-You are also performing an SEO audit. In addition to the brand profile fields above, also add these fields to your JSON response:
-- "seoAudit": "string — comprehensive SEO findings: title tags, meta descriptions, heading structure, content quality, keyword usage, image alt text, internal linking, mobile readiness, page speed indicators, structured data presence. Be specific with findings and recommendations."
+ADDITIONAL CONTEXT — SEO LLM QUERY ARCHITECT:
+You are also an SEO LLM Query Architect. In addition to the brand profile fields above, produce a comprehensive SEO intelligence report.
 
-SEO AUDIT FRAMEWORK:
-1. CRAWLABILITY: Check robots.txt references, sitemap indicators, site architecture
-2. ON-PAGE: Title tags (50-60ch, keyword placement), meta descriptions (150-160ch), H1/H2 hierarchy, keyword density
-3. CONTENT: Quality assessment, thin content flags, keyword targeting, content gaps
-4. TECHNICAL: HTTPS, URL structure, mobile indicators, page speed signals
-5. IMAGES: Alt text presence, optimization, modern formats
-6. INTERNAL LINKING: Navigation structure, anchor text quality
+Your JSON response must include ALL standard brand profile fields PLUS these additional top-level fields:
 
-Extract SEO keywords found in the page (meta keywords, title, headings, prominent text) and place them in the "seoKeywords" field.
-Extract the brand name, tagline, product info from the page content.
-Infer brand voice from the writing style on the page.`;
+"seoIntelligence": {
+  "webpage_content_summary": "3-5 sentence brand overview: what it is, who it serves, differentiators, B2C or B2B positioning, conversion goals.",
+  "detailed_icp_persona": {
+    "type": "B2C or B2B",
+    "consumer_context": "Paragraph describing highest-fit customer and decision environment.",
+    "demographic_information": {
+      "age_range": { "value": "", "confidence": "High|Medium|Low", "source_type": "supported_by_website|partially_inferred|externally_inferred" },
+      "gender": { "value": "", "confidence": "", "source_type": "" },
+      "education": { "value": "", "confidence": "", "source_type": "" },
+      "income_level": { "value": "", "confidence": "", "source_type": "" },
+      "family_status": { "value": "", "confidence": "", "source_type": "" }
+    },
+    "psychographic_information": {
+      "personal_values": [],
+      "attitudes": [],
+      "aspirations": []
+    },
+    "challenges": {
+      "explicit_pain_points": [{ "pain_point": "", "source_type": "" }],
+      "previously_attempted_solutions": [{ "solution": "", "why_it_failed": "" }]
+    },
+    "hopes_and_dreams": { "desired_outcomes": [], "aspirational_transformations": [] },
+    "fears_and_concerns": { "anxieties": [], "trust_concerns": [], "emotional_barriers": [] },
+    "emotional_triggers": { "emotional_states": [], "triggering_scenarios": [], "validation_needed": [] },
+    "decision_making_criteria": { "essential_criteria": [], "tradeoffs": [], "importance_of_endorsements": "" }
+  },
+  "keyword_recommendations": [
+    { "keyword": "", "confidence": "High|Medium|Low", "explanation": "", "source_type": "supported_by_website|partially_inferred|externally_inferred" }
+  ],
+  "generated_queries_for_llm_tracking": {
+    "pain_points_challenges": ["5 natural-language queries a real user would type into ChatGPT/Perplexity"],
+    "hopes_dreams": ["5 queries"],
+    "fears_concerns": ["5 queries"],
+    "decision_making_criteria": ["5 queries"],
+    "agitation_emotional_triggers": ["5 queries"],
+    "seo_keywords_adapted": ["5 queries adapted from keywords into conversational LLM searches"],
+    "mixed_queries": ["20 high-value mixed queries optimized for AI answer engine visibility — these must sound like real human searches, request actual/real recommendations"]
+  },
+  "core_seed_keywords": [
+    { "keyword": "", "confidence": "High|Medium|Low" }
+  ],
+  "looser_keyword_combinations": [
+    { "combination": "", "confidence": "High|Medium|Low", "note": "" }
+  ],
+  "seo_discovery_layer": {
+    "keyword_clusters": [{ "cluster_name": "", "intent": "informational|navigational|transactional|commercial", "keywords": [] }],
+    "content_angles": ["strategic content angles worth pursuing"]
+  },
+  "business_intelligence": {
+    "market_insights": "",
+    "competitive_positioning": "",
+    "customer_psychology_summary": "",
+    "strategic_opportunities": [],
+    "risk_analysis": ""
+  },
+  "notes_on_assumptions": ""
+}
+
+RULES:
+- keyword_recommendations: 10-15 minimum, mix transactional + local + category
+- generated_queries: 5 per category, 20 for mixed_queries
+- All LLM queries must sound like real human searches, not keyword strings
+- Queries should request "actual" or "real" recommendations to optimize for AI answer engine retrieval
+- core_seed_keywords: 5-8 entries
+- looser_keyword_combinations: 5-6 entries
+- Flag all inferences with correct source_type
+- Source types: supported_by_website, partially_inferred, externally_inferred
+- Confidence: High (strong evidence), Medium (reasonable inference), Low (speculative)
+
+Also include the standard brand profile fields AND:
+- "seoKeywords": extracted SEO keywords from the page
+- "seoAudit": brief on-page SEO findings (title tags, meta, headings, content quality)`;
 
     const userContent = htmlContent
-      ? `Perform an SEO audit and extract brand profile data from this website.\n\nURL: ${websiteUrl}\n\nHTML CONTENT:\n${htmlContent}`
-      : `Perform an SEO audit and extract brand profile data from this website URL. Analyze what you can infer from the URL structure, domain name, and any context available.\n\nURL: ${websiteUrl}`;
+      ? `Perform a full SEO intelligence analysis and extract brand profile data from this website.\n\nURL: ${websiteUrl}\n\nHTML CONTENT:\n${htmlContent}`
+      : `Perform a full SEO intelligence analysis and extract brand profile data from this website URL. Analyze what you can infer from the URL structure, domain name, and any context available.\n\nURL: ${websiteUrl}`;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: getApiHeaders(),
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 4096,
+        max_tokens: 8192,
         system: seoSystemPrompt,
         messages: [{ role: 'user', content: userContent }]
       })
@@ -1210,28 +1327,145 @@ Infer brand voice from the writing style on the page.`;
     // Step 3: Merge and display
     status.textContent = 'Step 3/3: Populating brand profile fields...';
 
-    // Store the SEO audit separately
+    // Store the SEO intelligence report separately
+    const seoIntelligence = extracted.seoIntelligence || null;
     const seoAudit = extracted.seoAudit || '';
+    delete extracted.seoIntelligence;
     delete extracted.seoAudit;
 
     // Always set the website URL
     extracted.websiteUrl = websiteUrl;
     mergeBrandExtraction(extracted);
 
-    // Show SEO audit results
-    if (seoAudit) {
-      status.innerHTML = '<span style="color:var(--green);">\u2713 SEO audit complete. Fields populated.</span><br><details style="margin-top:8px;cursor:pointer;"><summary style="font-size:11px;font-weight:600;color:var(--text-secondary);">View SEO Audit Report</summary><div style="margin-top:6px;font-size:11px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;max-height:300px;overflow-y:auto;padding:8px;background:var(--bg-secondary);border-radius:6px;border:0.5px solid var(--border);">' + esc(seoAudit) + '</div></details>';
+    // Build the SEO intelligence report display
+    let reportHtml = '';
+    if (seoIntelligence) {
+      reportHtml += '<div style="margin-top:8px;">';
+
+      // Summary
+      if (seoIntelligence.webpage_content_summary) {
+        reportHtml += '<details style="margin-bottom:6px;cursor:pointer;"><summary style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:0.3px;">Brand Summary</summary><div style="margin-top:4px;font-size:11px;color:var(--text-secondary);line-height:1.5;padding:6px 8px;background:var(--bg-secondary);border-radius:6px;border:0.5px solid var(--border);">' + esc(seoIntelligence.webpage_content_summary) + '</div></details>';
+      }
+
+      // ICP Persona
+      if (seoIntelligence.detailed_icp_persona) {
+        const icp = seoIntelligence.detailed_icp_persona;
+        let icpContent = '<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;padding:6px 8px;background:var(--bg-secondary);border-radius:6px;border:0.5px solid var(--border);max-height:250px;overflow-y:auto;">';
+        icpContent += '<div style="font-size:10px;font-weight:700;color:var(--purple);margin-bottom:4px;">Type: ' + esc(icp.type || '') + '</div>';
+        if (icp.consumer_context) icpContent += '<div style="margin-bottom:6px;">' + esc(icp.consumer_context) + '</div>';
+        if (icp.demographic_information) {
+          const demo = icp.demographic_information;
+          icpContent += '<div style="font-size:10px;font-weight:700;color:var(--blue);margin:6px 0 3px;">Demographics</div>';
+          Object.entries(demo).forEach(([k, v]) => { if (v && v.value) icpContent += '<div>' + esc(k.replace(/_/g, ' ')) + ': ' + esc(v.value) + ' <span style="font-size:9px;color:var(--text-tertiary);">(' + esc(v.confidence || '') + ')</span></div>'; });
+        }
+        if (icp.psychographic_information) {
+          icpContent += '<div style="font-size:10px;font-weight:700;color:var(--amber);margin:6px 0 3px;">Psychographics</div>';
+          const psych = icp.psychographic_information;
+          if (psych.personal_values?.length) icpContent += '<div>Values: ' + psych.personal_values.map(v => esc(v)).join(', ') + '</div>';
+          if (psych.attitudes?.length) icpContent += '<div>Attitudes: ' + psych.attitudes.map(v => esc(v)).join(', ') + '</div>';
+          if (psych.aspirations?.length) icpContent += '<div>Aspirations: ' + psych.aspirations.map(v => esc(v)).join(', ') + '</div>';
+        }
+        if (icp.challenges?.explicit_pain_points?.length) {
+          icpContent += '<div style="font-size:10px;font-weight:700;color:var(--accent);margin:6px 0 3px;">Pain Points</div>';
+          icp.challenges.explicit_pain_points.forEach(pp => { icpContent += '<div>\u2022 ' + esc(pp.pain_point || pp) + '</div>'; });
+        }
+        icpContent += '</div>';
+        reportHtml += '<details style="margin-bottom:6px;cursor:pointer;"><summary style="font-size:11px;font-weight:700;color:var(--purple);letter-spacing:0.3px;">ICP Persona</summary>' + icpContent + '</details>';
+      }
+
+      // Keywords
+      if (seoIntelligence.keyword_recommendations?.length) {
+        let kwContent = '<div style="font-size:11px;color:var(--text-secondary);line-height:1.6;padding:6px 8px;background:var(--bg-secondary);border-radius:6px;border:0.5px solid var(--border);max-height:200px;overflow-y:auto;">';
+        seoIntelligence.keyword_recommendations.forEach(kw => {
+          const conf = kw.confidence === 'High' ? 'var(--green)' : kw.confidence === 'Medium' ? 'var(--amber)' : 'var(--text-tertiary)';
+          kwContent += '<div style="margin-bottom:3px;"><span style="font-weight:600;">' + esc(kw.keyword) + '</span> <span style="font-size:9px;padding:1px 5px;border-radius:8px;background:var(--bg-tertiary);color:' + conf + ';">' + esc(kw.confidence) + '</span> <span style="font-size:10px;color:var(--text-tertiary);">' + esc(kw.explanation || '') + '</span></div>';
+        });
+        kwContent += '</div>';
+        reportHtml += '<details style="margin-bottom:6px;cursor:pointer;"><summary style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:0.3px;">Keyword Recommendations (' + seoIntelligence.keyword_recommendations.length + ')</summary>' + kwContent + '</details>';
+      }
+
+      // LLM Queries
+      if (seoIntelligence.generated_queries_for_llm_tracking) {
+        const queries = seoIntelligence.generated_queries_for_llm_tracking;
+        let qContent = '<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;padding:6px 8px;background:var(--bg-secondary);border-radius:6px;border:0.5px solid var(--border);max-height:300px;overflow-y:auto;">';
+        Object.entries(queries).forEach(([cat, qs]) => {
+          if (Array.isArray(qs) && qs.length) {
+            qContent += '<div style="font-size:10px;font-weight:700;color:var(--accent);margin:6px 0 3px;text-transform:uppercase;letter-spacing:0.3px;">' + esc(cat.replace(/_/g, ' ')) + '</div>';
+            qs.forEach(q => { qContent += '<div style="margin-bottom:2px;padding-left:8px;">\u2022 ' + esc(q) + '</div>'; });
+          }
+        });
+        qContent += '</div>';
+        reportHtml += '<details style="margin-bottom:6px;cursor:pointer;"><summary style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:0.3px;">LLM Queries for AI Search Visibility</summary>' + qContent + '</details>';
+      }
+
+      // Seed Keywords + Looser Combos
+      if (seoIntelligence.core_seed_keywords?.length || seoIntelligence.looser_keyword_combinations?.length) {
+        let seedContent = '<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;padding:6px 8px;background:var(--bg-secondary);border-radius:6px;border:0.5px solid var(--border);">';
+        if (seoIntelligence.core_seed_keywords?.length) {
+          seedContent += '<div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:3px;">Core Seeds</div>';
+          seoIntelligence.core_seed_keywords.forEach(sk => { seedContent += '<div>\u2022 ' + esc(sk.keyword) + ' <span style="font-size:9px;color:var(--text-tertiary);">(' + esc(sk.confidence) + ')</span></div>'; });
+        }
+        if (seoIntelligence.looser_keyword_combinations?.length) {
+          seedContent += '<div style="font-size:10px;font-weight:700;color:var(--amber);margin:6px 0 3px;">Looser Combinations</div>';
+          seoIntelligence.looser_keyword_combinations.forEach(lk => { seedContent += '<div>\u2022 ' + esc(lk.combination) + ' <span style="font-size:9px;color:var(--text-tertiary);">(' + esc(lk.confidence) + ')</span></div>'; });
+        }
+        seedContent += '</div>';
+        reportHtml += '<details style="margin-bottom:6px;cursor:pointer;"><summary style="font-size:11px;font-weight:700;color:var(--amber);letter-spacing:0.3px;">Seed Keywords & Research Combos</summary>' + seedContent + '</details>';
+      }
+
+      // SEO Discovery Layer
+      if (seoIntelligence.seo_discovery_layer) {
+        const disc = seoIntelligence.seo_discovery_layer;
+        let discContent = '<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;padding:6px 8px;background:var(--bg-secondary);border-radius:6px;border:0.5px solid var(--border);max-height:200px;overflow-y:auto;">';
+        if (disc.keyword_clusters?.length) {
+          disc.keyword_clusters.forEach(cl => {
+            discContent += '<div style="font-size:10px;font-weight:700;color:var(--blue);margin:4px 0 2px;">' + esc(cl.cluster_name) + ' <span style="font-size:9px;font-weight:400;color:var(--text-tertiary);">(' + esc(cl.intent) + ')</span></div>';
+            if (cl.keywords?.length) discContent += '<div style="padding-left:8px;">' + cl.keywords.map(k => esc(k)).join(', ') + '</div>';
+          });
+        }
+        if (disc.content_angles?.length) {
+          discContent += '<div style="font-size:10px;font-weight:700;color:var(--purple);margin:6px 0 3px;">Content Angles</div>';
+          disc.content_angles.forEach(a => { discContent += '<div>\u2022 ' + esc(a) + '</div>'; });
+        }
+        discContent += '</div>';
+        reportHtml += '<details style="margin-bottom:6px;cursor:pointer;"><summary style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:0.3px;">SEO & Discovery Layer</summary>' + discContent + '</details>';
+      }
+
+      // Business Intelligence
+      if (seoIntelligence.business_intelligence) {
+        const bi = seoIntelligence.business_intelligence;
+        let biContent = '<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;padding:6px 8px;background:var(--bg-secondary);border-radius:6px;border:0.5px solid var(--border);max-height:200px;overflow-y:auto;">';
+        if (bi.market_insights) biContent += '<div style="margin-bottom:4px;"><span style="font-weight:600;">Market:</span> ' + esc(bi.market_insights) + '</div>';
+        if (bi.competitive_positioning) biContent += '<div style="margin-bottom:4px;"><span style="font-weight:600;">Competitive:</span> ' + esc(bi.competitive_positioning) + '</div>';
+        if (bi.customer_psychology_summary) biContent += '<div style="margin-bottom:4px;"><span style="font-weight:600;">Psychology:</span> ' + esc(bi.customer_psychology_summary) + '</div>';
+        if (bi.strategic_opportunities?.length) { biContent += '<div style="font-weight:600;margin:4px 0 2px;">Opportunities:</div>'; bi.strategic_opportunities.forEach(o => { biContent += '<div>\u2022 ' + esc(o) + '</div>'; }); }
+        if (bi.risk_analysis) biContent += '<div style="margin-top:4px;"><span style="font-weight:600;">Risks:</span> ' + esc(bi.risk_analysis) + '</div>';
+        biContent += '</div>';
+        reportHtml += '<details style="margin-bottom:6px;cursor:pointer;"><summary style="font-size:11px;font-weight:700;color:var(--amber);letter-spacing:0.3px;">Business Intelligence</summary>' + biContent + '</details>';
+      }
+
+      reportHtml += '</div>';
+    }
+
+    // Show results
+    if (seoIntelligence || seoAudit) {
+      let fullHtml = '<span style="color:var(--green);">\u2713 SEO intelligence analysis complete. Fields populated.</span>';
+      if (seoAudit) {
+        fullHtml += '<br><details style="margin-top:6px;cursor:pointer;"><summary style="font-size:11px;font-weight:600;color:var(--text-secondary);">On-Page SEO Findings</summary><div style="margin-top:4px;font-size:11px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;max-height:200px;overflow-y:auto;padding:6px 8px;background:var(--bg-secondary);border-radius:6px;border:0.5px solid var(--border);">' + esc(seoAudit) + '</div></details>';
+      }
+      fullHtml += reportHtml;
+      status.innerHTML = fullHtml;
       status.className = 'brand-ai-status';
     } else {
-      status.textContent = '\u2713 SEO audit complete. Fields populated. Review and edit as needed.';
+      status.textContent = '\u2713 Analysis complete. Fields populated. Review and edit as needed.';
       status.className = 'brand-ai-status success';
     }
-    btn.textContent = '\u21BA Re-run Audit';
+    btn.textContent = '\u21BA Re-run Analysis';
     btn.disabled = false;
   } catch(err) {
-    status.textContent = '\u2715 SEO audit error: ' + err.message;
+    status.textContent = '\u2715 SEO analysis error: ' + err.message;
     status.className = 'brand-ai-status error';
-    btn.textContent = '\uD83D\uDD0D Run SEO Audit';
+    btn.textContent = '\uD83D\uDD0D Run SEO Analysis';
     btn.disabled = false;
   }
 }
@@ -3045,35 +3279,85 @@ function newProject() {
 }
 
 // ==================== CONTENT GENERATOR ====================
+function renderProfileAnalysis(data) {
+  const cards = document.getElementById('cgProfileCards');
+  const pillList = (arr) => arr.map(a => `<span style="display:inline-block;font-size:11px;padding:2px 8px;background:var(--bg-secondary);border:0.5px solid var(--border);border-radius:12px;margin:2px 3px 2px 0;color:var(--text-secondary);">${esc(a)}</span>`).join('');
+
+  cards.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div style="padding:10px;background:var(--bg-secondary);border-radius:8px;border:0.5px solid var(--border);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--purple);margin-bottom:4px;">Content Style</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.4;">${esc(data.content_style || '')}</div>
+      </div>
+      <div style="padding:10px;background:var(--bg-secondary);border-radius:8px;border:0.5px solid var(--border);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--blue);margin-bottom:4px;">Tone & Voice</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.4;">${esc(data.tone_voice || '')}</div>
+      </div>
+    </div>
+    <div style="padding:10px;background:var(--bg-secondary);border-radius:8px;border:0.5px solid var(--border);margin-bottom:8px;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--green);margin-bottom:4px;">Audience Profile</div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.4;">${esc(data.audience_profile || '')}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div style="padding:10px;background:var(--bg-secondary);border-radius:8px;border:0.5px solid var(--border);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--amber);margin-bottom:6px;">Top Content Types</div>
+        <div>${pillList(data.top_content_types || [])}</div>
+      </div>
+      <div style="padding:10px;background:var(--bg-secondary);border-radius:8px;border:0.5px solid var(--border);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent);margin-bottom:6px;">Hook Styles That Work</div>
+        <div>${pillList(data.hook_styles || [])}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div style="padding:10px;background:var(--bg-secondary);border-radius:8px;border:0.5px solid var(--border);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--purple);margin-bottom:4px;">Unique Angle</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.4;">${esc(data.unique_angle || '')}</div>
+      </div>
+      <div style="padding:10px;background:var(--bg-secondary);border-radius:8px;border:0.5px solid var(--border);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--green);margin-bottom:6px;">Engagement Triggers</div>
+        <div>${pillList(data.engagement_triggers || [])}</div>
+      </div>
+    </div>
+  `;
+}
+
 async function analyzeInstagramProfile() {
   const handle = document.getElementById('cgInstagramHandle').value.trim().replace(/^@/, '');
   if (!handle) { alert('Enter an Instagram handle first.'); return; }
   const btn = document.getElementById('cgAnalyzeProfileBtn');
   btn.disabled = true; btn.textContent = 'Analyzing...';
   const analysisBox = document.getElementById('cgProfileAnalysis');
-  const summaryEl = document.getElementById('cgProfileSummary');
   analysisBox.style.display = 'none';
 
-  const prompt = `Analyze the Instagram creator @${handle}. Based on your training knowledge of this account (or reasonable inference from the handle and context), provide a detailed analysis covering:
-
-1. **Content Style & Themes**: What topics they likely cover, their content format preferences
-2. **Tone & Voice**: How they communicate — casual, professional, raw, polished, educational, entertaining
-3. **Audience Profile**: Who follows them — demographics, interests, pain points, what they respond to
-4. **Engagement Patterns**: What type of content likely resonates most with their audience
-5. **Content Hooks That Work**: Based on their niche, what hook styles would perform best
-6. **Unique Angle**: What makes this creator's perspective different
+  const prompt = `Analyze the Instagram creator @${handle}. Based on your training knowledge of this account (or reasonable inference from the handle and context), provide a detailed analysis.
 
 ${brandProfile.brandName ? `The creator is associated with the brand "${brandProfile.brandName}" in the ${brandProfile.industry || 'unknown'} industry.` : ''}
 ${brandProfile.audiences?.length ? `Known target audiences: ${brandProfile.audiences.map(a => a.name + ': ' + a.description).join('; ')}` : ''}
 
-Be specific and actionable. This analysis will be used to generate content hooks and scripts that match this creator's style and resonate with their audience. If you don't have specific knowledge of this account, use the handle, brand context, and industry to make informed inferences about the likely creator profile.`;
+Return ONLY valid JSON with these keys:
+{
+  "handle": "@handle",
+  "content_style": "2-3 sentence summary of content style and themes",
+  "tone_voice": "2-3 sentence summary of tone and voice",
+  "audience_profile": "2-3 sentence audience description",
+  "top_content_types": ["3-4 content types that perform best"],
+  "hook_styles": ["3-4 hook styles that work for this creator"],
+  "unique_angle": "1-2 sentence unique differentiator",
+  "engagement_triggers": ["3-4 things that drive engagement for this audience"]
+}
+
+Be specific and actionable. If you don't have specific knowledge of this account, use the handle, brand context, and industry to make informed inferences. Return ONLY the JSON, no markdown fences, no extra text.`;
 
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: getApiHeaders(), body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] }) });
     const data = await resp.json();
     if (!resp.ok || data.error) throw new Error(data.error?.message || resp.status);
-    cgProfileData = data.content.map(b => b.text || '').join('');
-    summaryEl.textContent = cgProfileData;
+    const rawText = data.content.map(b => b.text || '').join('');
+    const cleaned = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    const profileData = JSON.parse(cleaned);
+    renderProfileAnalysis(profileData);
+    // Store as formatted string for content gen prompt
+    cgProfileData = `Handle: ${profileData.handle || '@' + handle}\nContent Style: ${profileData.content_style || ''}\nTone & Voice: ${profileData.tone_voice || ''}\nAudience: ${profileData.audience_profile || ''}\nTop Content Types: ${(profileData.top_content_types || []).join(', ')}\nHook Styles: ${(profileData.hook_styles || []).join(', ')}\nUnique Angle: ${profileData.unique_angle || ''}\nEngagement Triggers: ${(profileData.engagement_triggers || []).join(', ')}`;
     analysisBox.style.display = 'block';
   } catch(err) {
     alert('Profile analysis failed: ' + err.message);
@@ -3404,9 +3688,9 @@ function renderContentHistory() {
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
   const saved = getApiKey();
-  if (saved) { document.getElementById('apiKeyInput').value = saved; document.getElementById('apiKeyStatus').textContent = '\u2713 API key loaded.'; document.getElementById('apiKeyStatus').style.color = 'var(--green)'; }
+  if (saved) { document.getElementById('apiKeyInput').value = saved; document.getElementById('apiKeyStatus').textContent = '\u2713'; }
   const gs = getGeminiKey();
-  if (gs) { document.getElementById('geminiKeyInput').value = gs; document.getElementById('geminiKeyStatus').textContent = '\u2713 Gemini key loaded.'; document.getElementById('geminiKeyStatus').style.color = 'var(--green)'; }
+  if (gs) { document.getElementById('geminiKeyInput').value = gs; document.getElementById('geminiKeyStatus').textContent = '\u2713'; }
 
   loadProjects();
   loadBrandProfile();
