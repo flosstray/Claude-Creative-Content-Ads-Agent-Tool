@@ -374,6 +374,7 @@
     <button class="tab-btn active" onclick="switchTab('brand')" id="tabBrand"><span class="tab-icon">&#x1F3E2;</span>Brand Profile</button>
     <button class="tab-btn" onclick="switchTab('paid')" id="tabPaid"><span class="tab-icon">&#x1F4B0;</span>Paid Ads</button>
     <button class="tab-btn" onclick="switchTab('organic')" id="tabOrganic"><span class="tab-icon">&#x1F331;</span>Organic</button>
+    <button class="tab-btn" onclick="switchTab('content')" id="tabContent"><span class="tab-icon">&#x1F3AC;</span>Content Gen</button>
   </div>
 
   <!-- ===================== BRAND PROFILE TAB ===================== -->
@@ -719,6 +720,107 @@
     </div>
   </div>
 
+  <!-- ===================== CONTENT GENERATOR TAB ===================== -->
+  <div class="tab-content" id="content-content">
+
+    <div class="section-title">Creator Profile</div>
+    <div class="section-block">
+      <label>Instagram Handle</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="cgInstagramHandle" placeholder="@yourhandle" style="flex:1;">
+        <button class="analyze-btn" id="cgAnalyzeProfileBtn" onclick="analyzeInstagramProfile()" style="white-space:nowrap;padding:8px 14px;width:auto;margin-top:0;flex-shrink:0;">&#x1F50D; Analyze Profile</button>
+      </div>
+      <div class="field-hint">Enter your Instagram handle so Claude can analyze your content style and audience.</div>
+      <div id="cgProfileAnalysis" style="display:none;margin-top:10px;padding:12px;background:var(--bg-secondary);border-radius:var(--radius-md);border:0.5px solid var(--border-strong);">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--green);margin-bottom:6px;">&#x2713; Profile Analyzed</div>
+        <div id="cgProfileSummary" style="font-size:13px;color:var(--text-secondary);line-height:1.5;white-space:pre-wrap;"></div>
+      </div>
+    </div>
+
+    <div class="section-title">Content Concept</div>
+    <div class="section-block">
+      <label>Content Format</label>
+      <select id="cgContentFormat">
+        <option value="reel">Reel / Short-form Video</option>
+        <option value="carousel">Carousel Post</option>
+        <option value="talking_head">Talking Head Video</option>
+        <option value="story_series">Story Series</option>
+        <option value="live_outline">Live Stream Outline</option>
+        <option value="voiceover">Voiceover / B-Roll</option>
+      </select>
+    </div>
+
+    <div class="section-block">
+      <label>Topic / Concept <span style="font-weight:400;text-transform:none;letter-spacing:0;">&#8212; what's the video or post about?</span></label>
+      <textarea id="cgTopic" rows="3" placeholder="e.g. '5 morning habits that changed my life', 'Why most people fail at meal prep', 'Reacting to my first-ever video'..."></textarea>
+      <div class="field-hint">Be as specific or broad as you want. Claude will shape it into scroll-stopping content.</div>
+    </div>
+
+    <div class="section-block">
+      <label>Key Talking Points <span style="font-weight:400;text-transform:none;letter-spacing:0;">&#8212; what do you want to cover?</span></label>
+      <textarea id="cgTalkingPoints" rows="4" placeholder="List the main points, facts, stories, or examples you want to include. One per line.&#10;&#10;e.g.&#10;- Wake up at 5am consistently&#10;- Cold shower benefits&#10;- The compound effect of small habits"></textarea>
+    </div>
+
+    <div class="section-block">
+      <label>Focus / Angle <span style="font-weight:400;text-transform:none;letter-spacing:0;">&#8212; what's the main takeaway?</span></label>
+      <input type="text" id="cgFocus" placeholder="e.g. 'Make the audience rethink their morning routine', 'Inspire people to start small'">
+    </div>
+
+    <div class="section-title">Style & Tone</div>
+    <div class="grid-2">
+      <div class="section-block">
+        <label>Content Energy</label>
+        <select id="cgEnergy">
+          <option value="high_energy">High Energy — Hype, fast-paced</option>
+          <option value="calm_authority" selected>Calm Authority — Confident, measured</option>
+          <option value="raw_authentic">Raw & Authentic — Unfiltered, real talk</option>
+          <option value="storytelling">Storytelling — Narrative, personal</option>
+          <option value="educational">Educational — Teaching, value-driven</option>
+          <option value="comedic">Comedic — Funny, relatable</option>
+          <option value="motivational">Motivational — Inspiring, uplifting</option>
+          <option value="controversial">Controversial — Hot take, debate-worthy</option>
+        </select>
+      </div>
+      <div class="section-block">
+        <label>Variants to Generate</label>
+        <select id="cgVariants">
+          <option value="2">2 variants</option>
+          <option value="3" selected>3 variants</option>
+          <option value="4">4 variants</option>
+          <option value="5">5 variants</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="section-block">
+        <label>Target Audience</label>
+        <div class="pill-grid" id="cgAudienceGrid"></div>
+      </div>
+      <div class="section-block">
+        <label>Content Length</label>
+        <select id="cgLength">
+          <option value="short">Short (15-30 seconds / 3-5 slides)</option>
+          <option value="medium" selected>Medium (30-60 seconds / 5-10 slides)</option>
+          <option value="long">Long (1-3 minutes / 10-15 slides)</option>
+        </select>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <button class="generate-btn" id="cgGenerateBtn" onclick="generateContentIdeas()" style="background:linear-gradient(135deg,#E8222A,#d4900a);border-color:#d4900a;">&#x1F3AC; Generate Content</button>
+    <div id="cgOutputArea"></div>
+
+    <!-- CONTENT GEN HISTORY -->
+    <div class="history-section" id="cgHistorySection">
+      <div class="history-header">
+        <div class="history-title">Content Generator History</div>
+        <button class="history-clear-btn" onclick="clearHistory('content')">Clear All</button>
+      </div>
+      <div id="cgHistoryList"><div class="history-empty">No content generated yet. Create your first piece above.</div></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -747,6 +849,9 @@ let organicGeminiScene = '';
 
 let paidHistory = [];
 let organicHistory = [];
+let contentHistory = [];
+let cgProfileData = '';
+let selectedCgAudience = '';
 
 const API_KEY_STORAGE = 'ig_anthropic_api_key';
 const GEMINI_KEY_STORAGE = 'ig_gemini_api_key';
@@ -755,6 +860,7 @@ const PROJECTS_KEY = 'ig_projects';
 const ACTIVE_PROJECT_KEY = 'ig_active_project';
 const PAID_HISTORY_KEY = 'ig_paid_history';
 const ORGANIC_HISTORY_KEY = 'ig_organic_history';
+const CONTENT_HISTORY_KEY = 'ig_content_history';
 
 let currentProjectId = null;
 let projects = [];
@@ -1392,6 +1498,37 @@ function populateAudiencePills() {
     orgGrid.appendChild(allPill);
   }
   selectedOrganicAudience = audiences[0]?.name || 'General';
+
+  // Content Generator audience pills
+  const cgGrid = document.getElementById('cgAudienceGrid');
+  if (cgGrid) {
+    cgGrid.innerHTML = '';
+    audiences.forEach((aud, i) => {
+      const pill = document.createElement('div');
+      pill.className = 'pill' + (i === 0 ? ' active' : '');
+      pill.dataset.val = aud.name;
+      pill.textContent = aud.name;
+      pill.addEventListener('click', () => {
+        cgGrid.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        selectedCgAudience = aud.name;
+      });
+      cgGrid.appendChild(pill);
+    });
+    if (audiences.length > 1) {
+      const allPill = document.createElement('div');
+      allPill.className = 'pill';
+      allPill.dataset.val = 'all';
+      allPill.textContent = 'All';
+      allPill.addEventListener('click', () => {
+        cgGrid.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+        allPill.classList.add('active');
+        selectedCgAudience = 'all';
+      });
+      cgGrid.appendChild(allPill);
+    }
+    selectedCgAudience = audiences[0]?.name || 'General';
+  }
 }
 
 // ==================== TRENDS ====================
@@ -2643,6 +2780,8 @@ async function applyFieldDirection(idx, field, section) {
   if (!direction) { inputEl?.focus(); return; }
   if (section === 'paid') {
     await regenField(idx, field, direction);
+  } else if (section === 'content') {
+    await regenContentField(idx, field, direction);
   } else {
     await regenOrganicField(idx, field, direction);
   }
@@ -2798,7 +2937,8 @@ function exportCampaignBrief() {
 function loadHistory() {
   try { paidHistory = JSON.parse(localStorage.getItem(PAID_HISTORY_KEY + '_' + currentProjectId) || '[]'); } catch(e) { paidHistory = []; }
   try { organicHistory = JSON.parse(localStorage.getItem(ORGANIC_HISTORY_KEY + '_' + currentProjectId) || '[]'); } catch(e) { organicHistory = []; }
-  renderPaidHistory(); renderOrganicHistory();
+  try { contentHistory = JSON.parse(localStorage.getItem(CONTENT_HISTORY_KEY + '_' + currentProjectId) || '[]'); } catch(e) { contentHistory = []; }
+  renderPaidHistory(); renderOrganicHistory(); renderContentHistory();
 }
 
 function savePaidHistory(meta, variants) {
@@ -2820,6 +2960,7 @@ function saveOrganicHistory(meta, variants) {
 function clearHistory(type) {
   if (!confirm('Clear all history?')) return;
   if (type === 'paid') { paidHistory = []; try { localStorage.removeItem(PAID_HISTORY_KEY + '_' + currentProjectId); } catch(e) {} renderPaidHistory(); }
+  else if (type === 'content') { contentHistory = []; try { localStorage.removeItem(CONTENT_HISTORY_KEY + '_' + currentProjectId); } catch(e) {} renderContentHistory(); }
   else { organicHistory = []; try { localStorage.removeItem(ORGANIC_HISTORY_KEY + '_' + currentProjectId); } catch(e) {} renderOrganicHistory(); }
 }
 
@@ -2827,6 +2968,7 @@ function toggleHistoryItem(id) { const el = document.getElementById('hist-' + id
 function deleteHistoryItem(type, id, e) {
   e.stopPropagation();
   if (type === 'paid') { paidHistory = paidHistory.filter(x => x.id !== id); try { localStorage.setItem(PAID_HISTORY_KEY + '_' + currentProjectId, JSON.stringify(paidHistory)); } catch(e2) {} renderPaidHistory(); }
+  else if (type === 'content') { contentHistory = contentHistory.filter(x => x.id !== id); try { localStorage.setItem(CONTENT_HISTORY_KEY + '_' + currentProjectId, JSON.stringify(contentHistory)); } catch(e2) {} renderContentHistory(); }
   else { organicHistory = organicHistory.filter(x => x.id !== id); try { localStorage.setItem(ORGANIC_HISTORY_KEY + '_' + currentProjectId, JSON.stringify(organicHistory)); } catch(e2) {} renderOrganicHistory(); }
 }
 
@@ -2893,9 +3035,370 @@ function newProject() {
   document.getElementById('offerInput').value = ''; document.getElementById('outputArea').innerHTML = '';
   document.getElementById('organicSceneInput').value = ''; document.getElementById('organicTopicInput').value = '';
   document.getElementById('organicOutputArea').innerHTML = '';
+  document.getElementById('cgTopic').value = ''; document.getElementById('cgTalkingPoints').value = '';
+  document.getElementById('cgFocus').value = ''; document.getElementById('cgInstagramHandle').value = '';
+  document.getElementById('cgOutputArea').innerHTML = ''; cgProfileData = '';
+  document.getElementById('cgProfileAnalysis').style.display = 'none';
   document.getElementById('formatSelect').selectedIndex = 0; document.getElementById('toneSelect').selectedIndex = 0;
   renderUploadZone(); renderOrganicUploadZone();
   loadBrandProfile(); loadHistory(); updateProjectDisplay();
+}
+
+// ==================== CONTENT GENERATOR ====================
+async function analyzeInstagramProfile() {
+  const handle = document.getElementById('cgInstagramHandle').value.trim().replace(/^@/, '');
+  if (!handle) { alert('Enter an Instagram handle first.'); return; }
+  const btn = document.getElementById('cgAnalyzeProfileBtn');
+  btn.disabled = true; btn.textContent = 'Analyzing...';
+  const analysisBox = document.getElementById('cgProfileAnalysis');
+  const summaryEl = document.getElementById('cgProfileSummary');
+  analysisBox.style.display = 'none';
+
+  const prompt = `Analyze the Instagram creator @${handle}. Based on your training knowledge of this account (or reasonable inference from the handle and context), provide a detailed analysis covering:
+
+1. **Content Style & Themes**: What topics they likely cover, their content format preferences
+2. **Tone & Voice**: How they communicate — casual, professional, raw, polished, educational, entertaining
+3. **Audience Profile**: Who follows them — demographics, interests, pain points, what they respond to
+4. **Engagement Patterns**: What type of content likely resonates most with their audience
+5. **Content Hooks That Work**: Based on their niche, what hook styles would perform best
+6. **Unique Angle**: What makes this creator's perspective different
+
+${brandProfile.brandName ? `The creator is associated with the brand "${brandProfile.brandName}" in the ${brandProfile.industry || 'unknown'} industry.` : ''}
+${brandProfile.audiences?.length ? `Known target audiences: ${brandProfile.audiences.map(a => a.name + ': ' + a.description).join('; ')}` : ''}
+
+Be specific and actionable. This analysis will be used to generate content hooks and scripts that match this creator's style and resonate with their audience. If you don't have specific knowledge of this account, use the handle, brand context, and industry to make informed inferences about the likely creator profile.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: getApiHeaders(), body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] }) });
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error?.message || resp.status);
+    cgProfileData = data.content.map(b => b.text || '').join('');
+    summaryEl.textContent = cgProfileData;
+    analysisBox.style.display = 'block';
+  } catch(err) {
+    alert('Profile analysis failed: ' + err.message);
+  }
+  btn.disabled = false; btn.textContent = '\u{1F50D} Analyze Profile';
+}
+
+function buildContentGenSystemPrompt() {
+  const bp = brandProfile;
+  const audiences = (bp.audiences || []).map(a => `- ${a.name}: ${a.description}`).join('\n');
+
+  return `You are an elite content strategist and hook writer for Instagram creators. You specialize in writing scroll-stopping hooks, compelling scripts, and engaging content structures that resonate with specific audiences. You understand the psychology of why people stop scrolling, click, watch, and engage.
+
+=== CREATOR/BRAND CONTEXT ===
+${bp.brandName ? `BRAND: ${bp.brandName}` : ''}
+${bp.tagline ? `TAGLINE: ${bp.tagline}` : ''}
+${bp.industry ? `INDUSTRY: ${bp.industry}` : ''}
+${bp.brandVoice ? `BRAND VOICE: ${bp.brandVoice}` : ''}
+${audiences ? `TARGET AUDIENCES:\n${audiences}` : ''}
+${bp.customerVoice ? `REAL CUSTOMER/AUDIENCE VOICE:\n${bp.customerVoice}` : ''}
+
+${cgProfileData ? `=== INSTAGRAM PROFILE ANALYSIS ===\n${cgProfileData}\n` : ''}
+
+=== HOOK MASTERY FRAMEWORK ===
+
+THE 3-SECOND RULE:
+You have 3 seconds to stop the scroll. The first words determine everything. If the hook fails, nothing else matters.
+
+THE McDONALD'S TEST:
+If a truck driver wouldn't understand your hook, it's too complicated. Wider net = better performance.
+
+HOOK CATEGORIES (USE THESE):
+1. **Curiosity Gap**: "Nobody talks about [this aspect]..." / "The real reason [thing] works is..."
+2. **Bold Claim**: Counterintuitive statement. Challenge what everyone believes.
+3. **Direct Callout**: "If you're a [identity], watch this." / "[Audience]... stop doing [thing]."
+4. **Pattern Interrupt**: Something unexpected that breaks the feed pattern. Visual + verbal disruption.
+5. **Story Open**: "Last week I [did something], and [unexpected result]..." / "I used to [before state]..."
+6. **Question Hook**: Ask something that demands an answer. "Why do [surprising thing]?"
+7. **List/Promise**: "[Number] [things] that [outcome]" — promise structure and takeaways.
+8. **Social Proof**: "I've [credentials/results]. Here's what I learned..."
+9. **Controversy**: Take a side. "Unpopular opinion: [bold stance]..."
+10. **FOMO/Urgency**: "Everyone's doing [thing] wrong" / "Before you [action], watch this."
+11. **Relatable Pain**: Name a shared frustration. "Can we talk about how [annoying thing]..."
+12. **Transformation**: "[Before state] → [After state]. Here's the shift:"
+13. **Secret/Insider**: "The [thing] that [experts] won't tell you..."
+14. **Challenge**: "I dare you to try [thing] for [time period]..."
+15. **Reaction/Commentary**: "I just saw [thing] and I have thoughts..."
+
+STICKY SENTENCE TECHNIQUES:
+- Alliteration: Same starting sounds
+- Symmetry: Parallel structure
+- Contrast: Opposing ideas
+- Rhythm: Pleasing cadence
+- Specificity: Exact numbers, names, details
+
+SCRIPT STRUCTURE (for video/talking head):
+1. HOOK (0-3 sec): Stop the scroll. Make them NEED to know more.
+2. CONTEXT (3-8 sec): Set up the problem or topic. Build tension.
+3. VALUE (8-45 sec): Deliver the talking points. Each point should flow naturally.
+4. PAYOFF (last 5 sec): Land the main takeaway. Create a moment worth saving/sharing.
+5. CTA: Drive engagement — comment, save, share, follow.
+
+CAROUSEL STRUCTURE:
+1. Slide 1: Hook slide — bold statement, question, or claim that stops the scroll
+2. Slides 2-N: Each slide = one clear point. Visual hierarchy matters.
+3. Final Slide: Summary or CTA. Make it save-worthy.
+
+KEY PRINCIPLES:
+- Each variant must use a DIFFERENT hook type and angle
+- Write in the creator's natural voice, not corporate speak
+- Prioritize "save" and "share" triggers — educational value and relatability
+- Include specific callouts the audience will identify with
+- Punchline FIRST, then explain — don't bury the lead
+- Every sentence's job is to get them to the next sentence
+
+RESPOND IN THIS EXACT JSON FORMAT ONLY. No markdown. No preamble.
+{
+  "variants": [
+    {
+      "label": "Variant A",
+      "hook_type": "Which of the 15 hook categories this uses",
+      "hook": "The scroll-stopping opening line (first 3 seconds / first slide)",
+      "hook_alternatives": ["2-3 alternative hooks using different categories"],
+      "script_outline": "Full script/content outline with sections marked: [HOOK] [CONTEXT] [POINT 1] [POINT 2] etc. [PAYOFF] [CTA]",
+      "key_callouts": ["3-5 specific phrases, lines, or moments designed to resonate with the audience"],
+      "talking_points_refined": ["The user's talking points rewritten to be more compelling and structured"],
+      "caption": "Instagram caption to pair with this content",
+      "hashtags": "${bp.hashtags || '#content #creator'}",
+      "engagement_cta": "The specific CTA to drive comments/saves/shares",
+      "content_tip": "One tactical tip for filming/creating this specific piece",
+      "why_this_works": "Brief explanation of why this angle will resonate with the target audience"
+    }
+  ]
+}`;
+}
+
+async function generateContentIdeas() {
+  if (!brandProfile.brandName) { alert('Please set up your Brand Profile first (Brand Profile tab).'); switchTab('brand'); return; }
+
+  const topic = document.getElementById('cgTopic').value.trim();
+  const talkingPoints = document.getElementById('cgTalkingPoints').value.trim();
+  const focus = document.getElementById('cgFocus').value.trim();
+  const format = document.getElementById('cgContentFormat').value;
+  const energy = document.getElementById('cgEnergy').value;
+  const variants = document.getElementById('cgVariants').value;
+  const length = document.getElementById('cgLength').value;
+  const handle = document.getElementById('cgInstagramHandle').value.trim();
+
+  if (!topic && !talkingPoints) { document.getElementById('cgOutputArea').innerHTML = '<div class="error-msg">Enter a topic or talking points to get started.</div>'; return; }
+
+  const btn = document.getElementById('cgGenerateBtn');
+  const outputArea = document.getElementById('cgOutputArea');
+  btn.disabled = true; btn.textContent = 'Generating content...';
+  outputArea.innerHTML = '<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="loading-text">Claude is crafting your content hooks and scripts...</span></div>';
+
+  const formatLabels = { reel: 'Reel / Short-form Video', carousel: 'Carousel Post', talking_head: 'Talking Head Video', story_series: 'Story Series', live_outline: 'Live Stream Outline', voiceover: 'Voiceover / B-Roll' };
+  const energyLabels = { high_energy: 'High energy, hype, fast-paced', calm_authority: 'Calm authority, confident, measured', raw_authentic: 'Raw and authentic, unfiltered, real talk', storytelling: 'Storytelling, narrative, personal', educational: 'Educational, teaching, value-driven', comedic: 'Comedic, funny, relatable', motivational: 'Motivational, inspiring, uplifting', controversial: 'Controversial, hot take, debate-worthy' };
+  const lengthLabels = { short: 'Short (15-30 seconds / 3-5 slides)', medium: 'Medium (30-60 seconds / 5-10 slides)', long: 'Long (1-3 minutes / 10-15 slides)' };
+
+  const audienceDesc = selectedCgAudience === 'all' ? (brandProfile.audiences || []).map(a => `${a.name}: ${a.description}`).join('; ') : ((brandProfile.audiences || []).find(a => a.name === selectedCgAudience)?.description || selectedCgAudience);
+
+  const textContent = `Generate ${variants} content variants for a ${formatLabels[format]}.
+
+CONTENT FORMAT: ${formatLabels[format]}
+CONTENT LENGTH: ${lengthLabels[length]}
+ENERGY / TONE: ${energyLabels[energy] || energy}
+TARGET AUDIENCE: ${audienceDesc}
+${handle ? `CREATOR: @${handle.replace(/^@/, '')}` : ''}
+
+TOPIC / CONCEPT:
+${topic || '[No specific topic — generate based on talking points]'}
+
+KEY TALKING POINTS:
+${talkingPoints || '[No specific talking points — generate based on topic]'}
+
+${focus ? `MAIN FOCUS / TAKEAWAY:\n${focus}` : ''}
+
+REQUIREMENTS:
+- Each variant MUST use a completely different hook type (from the 15 hook categories)
+- Write the full script outline with clear sections
+- Include specific callouts and phrases designed to make the audience feel "this is exactly what I needed to hear"
+- Refine the talking points into more compelling, structured versions
+- Provide 2-3 alternative hooks for each variant so the creator can A/B test
+- Think about what would make someone SAVE this content or SHARE it via DM`;
+
+  const requestMeta = { format: formatLabels[format], energy, audience: selectedCgAudience, topic: topic || talkingPoints?.substring(0, 50) || 'Content', timestamp: new Date().toLocaleString() };
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: getApiHeaders(), body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 5000, system: buildContentGenSystemPrompt(), messages: [{ role: 'user', content: textContent }] }) });
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error?.message || resp.status);
+    const raw = data.content.map(b => b.text || '').join('');
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); }
+    catch(e) { throw new Error('Response malformed. Try again.'); }
+    if (!parsed.variants?.length) throw new Error('No variants returned.');
+    renderContentOutput(parsed.variants, formatLabels[format], energy);
+    saveContentHistory(requestMeta, parsed.variants);
+  } catch(err) {
+    outputArea.innerHTML = `<div class="error-msg"><strong>Error:</strong> ${err.message}</div>`;
+  }
+  btn.disabled = false; btn.textContent = '\u{1F3AC} Generate Content';
+}
+
+function buildContentCard(v, i, formatLabel, energy) {
+  const card = document.createElement('div');
+  card.className = 'copy-card';
+  card.dataset.variant = JSON.stringify(v);
+  card.dataset.idx = i;
+
+  const altHooksHtml = (v.hook_alternatives || []).map((h, hi) => `<div style="font-size:12px;color:var(--text-secondary);padding:4px 8px;background:var(--bg-secondary);border-radius:6px;margin-top:4px;cursor:pointer;" onclick="this.closest('.copy-card').querySelector('#cg-hook-${i}').value=this.textContent;this.style.background='rgba(39,160,106,0.15)'" title="Click to use this hook">${esc(h)}</div>`).join('');
+
+  const calloutsHtml = (v.key_callouts || []).map(c => `<div style="font-size:12px;padding:6px 10px;background:rgba(232,34,42,0.06);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;margin-top:4px;color:var(--text-primary);">"${esc(c)}"</div>`).join('');
+
+  const refinedPointsHtml = (v.talking_points_refined || []).map((tp, tpi) => `<div style="font-size:12px;color:var(--text-secondary);padding:4px 0;"><span style="color:var(--amber);font-weight:700;margin-right:6px;">${tpi+1}.</span>${esc(tp)}</div>`).join('');
+
+  card.innerHTML = `
+    <div class="variant-header" onclick="toggleVariantCard(this)">
+      <div class="variant-tag" style="color:var(--amber);">${v.label || 'Variant ' + (i+1)}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="funnel-label">${formatLabel} \u00B7 ${v.hook_type || energy}</div>
+        <span class="variant-chevron">\u25BC</span>
+      </div>
+    </div>
+    <div class="variant-body">
+    <div class="ad-fields">
+      <div class="ad-field"><div class="ad-field-label" style="color:var(--amber);">Hook \u2014 Opening Line<button class="field-copy-btn" onclick="copyField(this,'cg-hook-${i}')">&#x1F4CB; Copy</button><button class="field-regen-btn" onclick="regenContentField(${i},'hook')">&#x21BA; Regen</button><button class="field-regen-btn" onclick="toggleFieldDirection(${i},'hook','content')" style="background:rgba(212,144,10,0.1);color:var(--amber);border-color:rgba(212,144,10,0.2);">&#x270E; Direct</button></div><textarea class="field-textarea hook-style" rows="2" id="cg-hook-${i}"></textarea><div id="dir-content-hook-${i}"></div></div>
+
+      ${altHooksHtml ? `<div class="ad-field"><div class="ad-field-label" style="font-size:10px;">Alternative Hooks <span style="font-weight:400;text-transform:none;letter-spacing:0;">\u2014 click to use</span></div>${altHooksHtml}</div>` : ''}
+
+      <div class="ad-field"><div class="ad-field-label">Script / Content Outline<button class="field-copy-btn" onclick="copyField(this,'cg-script-${i}')">&#x1F4CB; Copy</button><button class="field-regen-btn" onclick="regenContentField(${i},'script_outline')">&#x21BA; Regen</button><button class="field-regen-btn" onclick="toggleFieldDirection(${i},'script_outline','content')" style="background:rgba(212,144,10,0.1);color:var(--amber);border-color:rgba(212,144,10,0.2);">&#x270E; Direct</button></div><textarea class="field-textarea" rows="10" id="cg-script-${i}" style="line-height:1.6;"></textarea><div id="dir-content-script_outline-${i}"></div></div>
+
+      ${calloutsHtml ? `<div class="ad-field"><div class="ad-field-label" style="color:var(--accent);">Key Callouts \u2014 Lines That Resonate</div>${calloutsHtml}</div>` : ''}
+
+      ${refinedPointsHtml ? `<div class="ad-field"><div class="ad-field-label" style="color:var(--amber);">Refined Talking Points</div>${refinedPointsHtml}</div>` : ''}
+
+      <div class="ad-field"><div class="ad-field-label">Caption<button class="field-copy-btn" onclick="copyField(this,'cg-caption-${i}','cg-hashtags-${i}')">&#x1F4CB; Copy</button><button class="field-regen-btn" onclick="regenContentField(${i},'caption')">&#x21BA; Regen</button><button class="field-regen-btn" onclick="toggleFieldDirection(${i},'caption','content')" style="background:rgba(212,144,10,0.1);color:var(--amber);border-color:rgba(212,144,10,0.2);">&#x270E; Direct</button></div><textarea class="field-textarea" rows="4" id="cg-caption-${i}"></textarea><textarea class="field-textarea" rows="1" style="color:var(--amber);margin-top:4px;" id="cg-hashtags-${i}"></textarea><div id="dir-content-caption-${i}"></div></div>
+
+      <div class="ad-field"><div class="ad-field-label">Engagement CTA<button class="field-copy-btn" onclick="copyField(this,'cg-cta-${i}')">&#x1F4CB; Copy</button></div><textarea class="field-textarea" rows="2" id="cg-cta-${i}"></textarea></div>
+    </div>
+
+    <div class="strategy-tip" id="cg-tip-${i}" style="display:${v.content_tip?'block':'none'};border-left-color:var(--amber);"><div class="strategy-tip-label" style="color:var(--amber);">Content Tip</div><div class="strategy-tip-text" id="cg-tip-text-${i}"></div></div>
+    <div class="strategy-tip" id="cg-why-${i}" style="display:${v.why_this_works?'block':'none'};border-left-color:var(--green);"><div class="strategy-tip-label" style="color:var(--green);">Why This Works</div><div class="strategy-tip-text" id="cg-why-text-${i}"></div></div>
+
+    <div class="card-actions">
+      <button class="action-btn primary-action" style="background:var(--amber);border-color:var(--amber);" onclick="copyContentAll(this,${i})">Copy All</button>
+      <button class="action-btn" onclick="copyEditedField(this,'cg-hook-${i}')">Copy Hook</button>
+      <button class="action-btn" onclick="copyEditedField(this,'cg-script-${i}')">Copy Script</button>
+    </div>
+    <div class="feedback-row">
+      <input type="text" class="feedback-input" id="cg-feedback-${i}" placeholder="Give direction: e.g. make the hook more controversial, shorter script, different angle...">
+      <button class="regen-btn" onclick="regenContentWithFeedback(${i})" id="cg-regen-feedback-btn-${i}" style="border-color:rgba(212,144,10,0.3);color:var(--amber);">Apply + Regen</button>
+      <button class="regen-btn regen-full" onclick="regenContentVariant(${i})" id="cg-regen-full-btn-${i}" style="background:rgba(212,144,10,0.1);border-color:rgba(212,144,10,0.35);color:var(--amber);">&#x21BA; New Variant</button>
+    </div>
+    </div>`;
+
+  const setField = (id, val) => { const el = card.querySelector('#' + id); if (el) el.value = val; };
+  const setText = (id, val) => { const el = card.querySelector('#' + id); if (el) el.textContent = val; };
+
+  setField('cg-hook-' + i, v.hook || '');
+  setField('cg-script-' + i, v.script_outline || '');
+  setField('cg-caption-' + i, v.caption || '');
+  setField('cg-hashtags-' + i, v.hashtags || '');
+  setField('cg-cta-' + i, v.engagement_cta || '');
+  if (v.content_tip) setText('cg-tip-text-' + i, v.content_tip);
+  if (v.why_this_works) setText('cg-why-text-' + i, v.why_this_works);
+
+  return card;
+}
+
+function renderContentOutput(variants, formatLabel, energy) {
+  const outputArea = document.getElementById('cgOutputArea');
+  outputArea.innerHTML = `<div class="output-label" style="color:var(--amber);">${variants.length} variants \u00B7 ${formatLabel}</div>`;
+  variants.forEach((v, i) => outputArea.appendChild(buildContentCard(v, i, formatLabel, energy)));
+}
+
+function copyContentAll(btn, idx) {
+  const hook = document.getElementById('cg-hook-' + idx)?.value || '';
+  const script = document.getElementById('cg-script-' + idx)?.value || '';
+  const caption = document.getElementById('cg-caption-' + idx)?.value || '';
+  const hashtags = document.getElementById('cg-hashtags-' + idx)?.value || '';
+  const cta = document.getElementById('cg-cta-' + idx)?.value || '';
+  const full = `HOOK:\n${hook}\n\nSCRIPT:\n${script}\n\nCAPTION:\n${caption}\n\n${hashtags}\n\nCTA:\n${cta}`;
+  navigator.clipboard.writeText(full).then(() => { btn.textContent = '\u2713 Copied!'; setTimeout(() => btn.textContent = 'Copy All', 1500); });
+}
+
+async function regenContentField(idx, field, direction) {
+  const cards = document.querySelectorAll('#cgOutputArea .copy-card'); const card = cards[idx]; if (!card) return;
+  const fieldMap = { hook: 'cg-hook-', script_outline: 'cg-script-', caption: 'cg-caption-', engagement_cta: 'cg-cta-', hashtags: 'cg-hashtags-' };
+  const prefix = fieldMap[field] || ('cg-' + field + '-');
+  const valEl = document.getElementById(prefix + idx); if (!valEl) return;
+  const orig = valEl.value; valEl.classList.add('field-spinning'); valEl.value = 'Regenerating...';
+  const cv = JSON.parse(card.dataset.variant || '{}');
+  let prompt = `Regenerate ONLY the "${field}" for this content variant. Keep everything else the same.\nCurrent ${field}: ${cv[field]||''}\nHook: ${cv.hook||''}\nTopic context: ${document.getElementById('cgTopic')?.value || ''}`;
+  if (direction) prompt += `\n\nUSER DIRECTION: ${direction}`;
+  prompt += `\nRespond in JSON: {"variants":[{...all fields...}]}`;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: getApiHeaders(), body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1500, system: buildContentGenSystemPrompt(), messages: [{ role: 'user', content: prompt }] }) });
+    const data = await resp.json(); if (!resp.ok || data.error) throw new Error(data.error?.message || resp.status);
+    const parsed = JSON.parse(data.content.map(b => b.text||'').join('').replace(/```json|```/g, '').trim());
+    const updated = parsed.variants[0];
+    const sv = JSON.parse(card.dataset.variant || '{}'); sv[field] = updated[field]; card.dataset.variant = JSON.stringify(sv);
+    valEl.classList.remove('field-spinning'); valEl.value = updated[field] || '';
+    valEl.style.transition = 'background 0.3s'; valEl.style.background = 'rgba(212,144,10,0.1)'; setTimeout(() => valEl.style.background = '', 1200);
+  } catch(err) { valEl.classList.remove('field-spinning'); valEl.value = orig; alert('Failed: ' + err.message); }
+}
+
+async function regenContentVariant(idx) {
+  const cards = document.querySelectorAll('#cgOutputArea .copy-card'); const card = cards[idx]; if (!card) return;
+  const btn = document.getElementById('cg-regen-full-btn-' + idx);
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
+  const cv = JSON.parse(card.dataset.variant || '{}');
+  const format = document.getElementById('cgContentFormat')?.value || 'reel';
+  const fmtLabels = { reel: 'Reel / Short-form Video', carousel: 'Carousel Post', talking_head: 'Talking Head Video', story_series: 'Story Series', live_outline: 'Live Stream Outline', voiceover: 'Voiceover / B-Roll' };
+  const energy = document.getElementById('cgEnergy')?.value || 'calm_authority';
+  const prompt = `Generate 1 NEW content variant for a ${fmtLabels[format] || format}.\nTopic: ${document.getElementById('cgTopic')?.value || ''}\nMake it completely different from: ${cv.hook_type || cv.hook || ''}\nUse a DIFFERENT hook category.\nRespond in JSON: {"variants":[{...}]}`;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: getApiHeaders(), body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2000, system: buildContentGenSystemPrompt(), messages: [{ role: 'user', content: prompt }] }) });
+    const data = await resp.json(); if (!resp.ok || data.error) throw new Error(data.error?.message || resp.status);
+    const parsed = JSON.parse(data.content.map(b => b.text||'').join('').replace(/```json|```/g, '').trim());
+    const nv = parsed.variants[0]; nv.label = cv.label;
+    card.replaceWith(buildContentCard(nv, idx, fmtLabels[format] || format, energy));
+  } catch(err) { if (btn) { btn.disabled = false; btn.textContent = '\u21BA New Variant'; } alert('Regen failed: ' + err.message); }
+}
+
+async function regenContentWithFeedback(idx) {
+  const cards = document.querySelectorAll('#cgOutputArea .copy-card'); const card = cards[idx]; if (!card) return;
+  const fb = document.getElementById('cg-feedback-' + idx); const feedback = fb?.value.trim();
+  if (!feedback) { fb?.focus(); return; }
+  const btn = document.getElementById('cg-regen-feedback-btn-' + idx);
+  if (btn) { btn.disabled = true; btn.textContent = 'Applying...'; }
+  const cv = JSON.parse(card.dataset.variant || '{}');
+  const format = document.getElementById('cgContentFormat')?.value || 'reel';
+  const fmtLabels = { reel: 'Reel / Short-form Video', carousel: 'Carousel Post', talking_head: 'Talking Head Video', story_series: 'Story Series', live_outline: 'Live Stream Outline', voiceover: 'Voiceover / B-Roll' };
+  const energy = document.getElementById('cgEnergy')?.value || 'calm_authority';
+  const prompt = `Rewrite this content variant applying feedback.\nHook: ${cv.hook||''}\nScript: ${cv.script_outline||''}\nFEEDBACK: ${feedback}\nKeep the label "${cv.label}".\nRespond in JSON: {"variants":[{...}]}`;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: getApiHeaders(), body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2000, system: buildContentGenSystemPrompt(), messages: [{ role: 'user', content: prompt }] }) });
+    const data = await resp.json(); if (!resp.ok || data.error) throw new Error(data.error?.message || resp.status);
+    const parsed = JSON.parse(data.content.map(b => b.text||'').join('').replace(/```json|```/g, '').trim());
+    const nv = parsed.variants[0]; nv.label = cv.label;
+    card.replaceWith(buildContentCard(nv, idx, fmtLabels[format] || format, energy));
+  } catch(err) { if (btn) { btn.disabled = false; btn.textContent = 'Apply + Regen'; } alert('Failed: ' + err.message); }
+}
+
+function saveContentHistory(meta, variants) {
+  const entry = { id: Date.now(), meta, variants, timestamp: new Date().toISOString() };
+  contentHistory.unshift(entry);
+  if (contentHistory.length > 20) contentHistory = contentHistory.slice(0, 20);
+  try { localStorage.setItem(CONTENT_HISTORY_KEY + '_' + currentProjectId, JSON.stringify(contentHistory)); } catch(e) {}
+  renderContentHistory();
+}
+
+function renderContentHistory() {
+  const list = document.getElementById('cgHistoryList');
+  if (!list) return;
+  if (contentHistory.length === 0) { list.innerHTML = '<div class="history-empty">No content generated yet.</div>'; return; }
+  list.innerHTML = '';
+  contentHistory.forEach((entry, ei) => {
+    const m = entry.meta;
+    const varHtml = entry.variants.map((v, vi) => `<div class="history-variant-block"><div class="history-variant-label" style="color:var(--amber);">${esc(v.label||'Variant')}</div><div class="history-field"><div class="history-field-name">Hook</div><div style="font-size:12px;color:var(--text-secondary);font-weight:600;">${esc(v.hook||'')}</div></div><div class="history-field"><div class="history-field-name">Script</div><div style="font-size:12px;color:var(--text-secondary);white-space:pre-wrap;max-height:120px;overflow:hidden;">${esc(v.script_outline||'')}</div></div></div>`).join('');
+    const item = document.createElement('div'); item.className = 'history-item'; item.id = 'hist-' + entry.id;
+    item.innerHTML = `<div class="history-item-header" onclick="toggleHistoryItem(${entry.id})"><div class="history-thumb-placeholder" style="color:var(--amber);">&#x1F3AC;</div><div class="history-item-meta"><span class="history-meta-tag" style="background:rgba(212,144,10,0.1);color:var(--amber);border-color:rgba(212,144,10,0.3);">${esc(m.format)}</span><span class="history-meta-tag">${esc(m.audience)}</span><span class="history-scene">${esc(m.topic)}</span><span class="history-timestamp">${esc(m.timestamp)}</span></div><button class="history-delete-btn" onclick="deleteHistoryItem('content',${entry.id},event)">&#x2715;</button><span class="history-chevron">\u25BC</span></div><div class="history-item-body">${varHtml}</div>`;
+    list.appendChild(item);
+  });
 }
 
 // ==================== INIT ====================
