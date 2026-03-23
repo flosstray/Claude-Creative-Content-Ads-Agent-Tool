@@ -1207,18 +1207,31 @@ async function runSeoAudit() {
   status.className = 'brand-ai-status working';
 
   try {
-    // Step 1: Fetch the website HTML
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(websiteUrl)}`;
+    // Step 1: Fetch the website HTML via multiple proxy fallbacks
     let htmlContent = '';
-    try {
-      const fetchRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
-      if (!fetchRes.ok) throw new Error('Fetch failed');
-      htmlContent = await fetchRes.text();
-      if (htmlContent.length > 50000) htmlContent = htmlContent.substring(0, 50000);
-    } catch(fetchErr) {
-      htmlContent = '';
-      status.textContent = 'Step 1/3: Could not fetch HTML directly. Analyzing URL context...';
+    const proxies = [
+      url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+    ];
+    for (let i = 0; i < proxies.length && !htmlContent; i++) {
+      try {
+        status.textContent = `Step 1/3: Fetching website content (attempt ${i+1}/${proxies.length})...`;
+        const fetchRes = await fetch(proxies[i](websiteUrl), { signal: AbortSignal.timeout(12000) });
+        if (!fetchRes.ok) continue;
+        const txt = await fetchRes.text();
+        // Validate we got real HTML, not an error page or empty response
+        if (txt.length > 200 && (txt.includes('<') || txt.includes('{'))) {
+          htmlContent = txt.length > 60000 ? txt.substring(0, 60000) : txt;
+        }
+      } catch(fetchErr) { continue; }
     }
+    if (!htmlContent) {
+      status.textContent = 'Step 1/3: Could not fetch site HTML. Claude will analyze based on URL only — results may be less accurate.';
+    } else {
+      status.textContent = `Step 1/3: ✓ Fetched ${(htmlContent.length/1024).toFixed(0)}KB of site content.`;
+    }
+    await new Promise(r => setTimeout(r, 500)); // brief pause so user sees status
 
     // Step 2: Send to Claude for full SEO intelligence + brand extraction
     status.textContent = 'Step 2/3: Claude is performing SEO intelligence analysis...';
@@ -1288,7 +1301,10 @@ Your JSON response must include ALL standard brand profile fields PLUS these add
   "notes_on_assumptions": ""
 }
 
-RULES:
+CRITICAL RULES:
+- You MUST determine what the business actually is from the HTML content provided. Do NOT guess based on the URL/domain name alone. Read the actual page content — look at headings, meta tags, navigation, product descriptions, about sections, etc.
+- If the HTML content clearly shows the business is a restaurant, treat it as a restaurant. If it's a law firm, treat it as a law firm. The page content overrides any assumptions from the domain name.
+- Never fabricate facts that contradict the actual site content.
 - keyword_recommendations: 10-15 minimum, mix transactional + local + category
 - generated_queries: 5 per category, 20 for mixed_queries
 - All LLM queries must sound like real human searches, not keyword strings
@@ -1304,8 +1320,8 @@ Also include the standard brand profile fields AND:
 - "seoAudit": brief on-page SEO findings (title tags, meta, headings, content quality)`;
 
     const userContent = htmlContent
-      ? `Perform a full SEO intelligence analysis and extract brand profile data from this website.\n\nURL: ${websiteUrl}\n\nHTML CONTENT:\n${htmlContent}`
-      : `Perform a full SEO intelligence analysis and extract brand profile data from this website URL. Analyze what you can infer from the URL structure, domain name, and any context available.\n\nURL: ${websiteUrl}`;
+      ? `Perform a full SEO intelligence analysis and extract brand profile data from this website.\n\nCRITICAL: Base ALL your analysis ONLY on the actual HTML content provided below. Do NOT guess or assume what the business is — read the page content carefully to determine what the company actually does, sells, or offers. The page content is the source of truth.\n\nURL: ${websiteUrl}\n\nACTUAL HTML CONTENT FROM THE WEBSITE:\n${htmlContent}`
+      : `I could NOT fetch the HTML content from this website. Provide your best analysis based on the URL alone, but clearly mark EVERY field with "(inferred — site not accessible)" since you cannot verify what this business actually does.\n\nIMPORTANT: Do NOT confidently state what the business is or does — you are guessing from the URL alone. Be transparent about this limitation. If the URL/domain name is ambiguous, list multiple possibilities for what the business could be.\n\nURL: ${websiteUrl}`;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
